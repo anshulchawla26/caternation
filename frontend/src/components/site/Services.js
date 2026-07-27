@@ -25,7 +25,7 @@ export default function Services() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {items.map((it, i) => (
             <Reveal key={it.id} delay={(i % 3) * 0.08} y={50}>
-              <article data-testid={`service-card-${it.id}`} className="group relative overflow-hidden rounded-sm bg-white">
+              <article data-testid={`service-card-${it.id}`} className="lux-card group relative overflow-hidden rounded-md bg-white shadow-[0_10px_40px_-20px_rgba(0,0,0,0.25)]">
                 <div className="relative overflow-hidden aspect-[4/5]">
                   <img
                     src={it.image_url}

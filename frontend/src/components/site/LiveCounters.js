@@ -23,7 +23,7 @@ export default function LiveCounters() {
           {items.map((it, i) => (
             <Reveal key={it.id} delay={i * 0.1} y={50}>
               <article data-testid={`counter-${it.id}`} className="group">
-                <div className="relative overflow-hidden rounded-sm aspect-[3/4]">
+                <div className="relative overflow-hidden rounded-md aspect-[3/4] shadow-[0_20px_50px_-30px_rgba(0,0,0,0.8)]">
                   <img
                     src={it.image_url}
                     alt={it.title}

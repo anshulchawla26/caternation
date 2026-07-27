@@ -74,7 +74,7 @@ export default function Gallery() {
                 transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                 data-testid={`gallery-item-${it.id}`}
                 onClick={() => setLightbox(idx)}
-                className="group mb-4 md:mb-6 break-inside-avoid overflow-hidden rounded-sm cursor-pointer relative"
+                className="group mb-4 md:mb-6 break-inside-avoid overflow-hidden rounded-md cursor-pointer relative shadow-[0_8px_30px_-18px_rgba(0,0,0,0.35)]"
               >
                 <img
                   src={it.image_url}

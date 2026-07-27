@@ -24,19 +24,21 @@ export default function Hero() {
         <img src={h.image_url} alt="CaterNation signature plating" className="h-full w-full object-cover" />
       </motion.div>
       <motion.div style={{ opacity: overlay }} className="absolute inset-0 bg-black" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/35" />
+      <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(120% 80% at 50% 40%, transparent 45%, rgba(0,0,0,0.45) 100%)" }} />
 
-      <div className="relative z-10 h-full max-w-screen-2xl mx-auto px-6 md:px-12 flex flex-col justify-end pb-24 md:pb-28">
-        <motion.p
+      <div className="relative z-10 h-full max-w-screen-2xl mx-auto px-6 md:px-12 flex flex-col justify-end pb-28 md:pb-32">
+        <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.9, ease: easeLux }}
-          className="overline text-gold mb-6"
+          className="flex items-center gap-4 mb-7"
         >
-          {h.overline}
-        </motion.p>
+          <span className="h-px w-10 bg-gold/80" />
+          <p className="overline text-gold">{h.overline}</p>
+        </motion.div>
 
-        <h1 className="font-head text-white font-medium tracking-tight leading-[0.95] text-5xl sm:text-7xl lg:text-[7.5vw]">
+        <h1 className="font-head text-white font-medium tracking-[-0.02em] leading-[0.92] text-[3.25rem] sm:text-7xl lg:text-[7.8vw]">
           {lines.map((line, i) => (
             <MaskLine key={i} delay={0.5 + i * 0.18}>
               {line}
@@ -48,7 +50,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.0, duration: 0.9, ease: easeLux }}
-          className="mt-8 max-w-xl text-white/80 text-base md:text-lg leading-relaxed font-body"
+          className="mt-8 max-w-lg text-white/75 text-base md:text-[1.075rem] leading-relaxed font-body font-light"
         >
           {h.subheading}
         </motion.p>
@@ -57,12 +59,12 @@ export default function Hero() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.2, duration: 0.9, ease: easeLux }}
-          className="mt-10 flex flex-wrap gap-4"
+          className="mt-11 flex flex-wrap gap-4"
         >
           <a
             data-testid="hero-call-btn"
             href={telHref(c.primary_phone)}
-            className="inline-flex items-center gap-2 rounded-full bg-gold px-8 py-4 text-white font-medium tracking-wide hover:opacity-90 transition-opacity"
+            className="btn-lux inline-flex items-center gap-2.5 rounded-full bg-gold px-9 py-4 text-white font-medium tracking-wide before:bg-white hover:!text-[color:var(--cn-ink)] shadow-lg shadow-black/20 hover:-translate-y-0.5"
           >
             <Phone size={18} /> {h.cta_call_label || "Call Us"}
           </a>
@@ -71,7 +73,7 @@ export default function Hero() {
             href={waHref(c.primary_whatsapp, "Hello CaterNation, I would like to know more about your catering services.")}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border border-white/50 px-8 py-4 text-white font-medium tracking-wide hover:bg-white hover:text-black transition-colors duration-300"
+            className="btn-lux inline-flex items-center gap-2.5 rounded-full border border-white/40 bg-white/5 backdrop-blur-md px-9 py-4 text-white font-medium tracking-wide before:bg-white hover:!text-[color:var(--cn-ink)] hover:-translate-y-0.5"
           >
             <MessageCircle size={18} /> {h.cta_whatsapp_label || "WhatsApp"}
           </a>
@@ -82,10 +84,11 @@ export default function Hero() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.6, duration: 1 }}
-        className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 text-white/70"
+        className="absolute bottom-7 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 text-white/60"
       >
-        <motion.div animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 2 }}>
-          <ArrowDown size={20} />
+        <span className="text-[10px] uppercase tracking-[0.3em]">Scroll</span>
+        <motion.div animate={{ y: [0, 7, 0] }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}>
+          <ArrowDown size={18} />
         </motion.div>
       </motion.div>
     </section>

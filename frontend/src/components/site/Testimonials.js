@@ -23,7 +23,7 @@ export default function Testimonials() {
         <div className="grid md:grid-cols-3 gap-6 md:gap-8">
           {items.map((it, i) => (
             <Reveal key={it.id} delay={i * 0.1} y={50}>
-              <figure data-testid={`testimonial-${it.id}`} className="h-full bg-white rounded-sm p-8 md:p-10 border border-black/5 flex flex-col">
+              <figure data-testid={`testimonial-${it.id}`} className="lux-card h-full bg-white rounded-md p-8 md:p-10 border border-black/5 shadow-[0_10px_40px_-24px_rgba(0,0,0,0.25)] flex flex-col">
                 <Quote size={30} className="text-gold mb-6" />
                 <blockquote className="font-head text-xl md:text-[1.4rem] leading-relaxed text-neutral-800 flex-1">
                   &ldquo;{it.quote}&rdquo;

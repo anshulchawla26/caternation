@@ -30,7 +30,7 @@ export default function Contact() {
             <div className="grid sm:grid-cols-2 gap-6">
               {owners.map((o) => (
                 <Reveal key={o.id} y={40}>
-                  <div data-testid={`owner-card-${o.id}`} className="bg-beige rounded-sm p-7 border border-black/5 h-full">
+                  <div data-testid={`owner-card-${o.id}`} className="lux-card bg-beige rounded-md p-7 border border-black/5 shadow-[0_10px_40px_-26px_rgba(0,0,0,0.3)] h-full">
                     <p className="overline text-gold mb-4">{o.role}</p>
                     <h3 className="font-head text-2xl">{o.name}</h3>
                     <div className="mt-6 flex flex-col gap-3">
@@ -52,7 +52,7 @@ export default function Contact() {
                   <MapPin size={20} className="text-gold shrink-0 mt-1" />
                   <div>
                     <p className="font-medium">Visit us</p>
-                    <p className="text-neutral-600 text-sm mt-1 leading-relaxed">{c.address}<br />{c.city}</p>
+                    <p className="text-neutral-600 text-sm mt-1 leading-relaxed"><span className="font-medium text-[color:var(--cn-ink)]">{s.brand_name}</span><br />{c.address}<br />{c.city}</p>
                   </div>
                 </div>
                 <div className="flex gap-4">

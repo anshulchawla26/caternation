@@ -46,14 +46,14 @@ export default function Header() {
         animate={{ y: 0 }}
         transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         className={`fixed top-0 inset-x-0 z-40 transition-all duration-500 ${
-          scrolled ? "bg-white/80 backdrop-blur-xl border-b border-black/5" : "bg-transparent"
+          scrolled ? "bg-white/75 backdrop-blur-2xl border-b border-black/5 shadow-[0_1px_30px_-15px_rgba(0,0,0,0.25)]" : "bg-gradient-to-b from-black/25 to-transparent"
         }`}
       >
         <div className="max-w-screen-2xl mx-auto px-6 md:px-12 h-20 flex items-center justify-between">
           <button
             data-testid="logo-btn"
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className={`font-head text-2xl tracking-tight transition-colors ${
+            className={`font-head text-2xl tracking-tight transition-all duration-300 hover:opacity-70 ${
               scrolled ? "text-[color:var(--cn-ink)]" : "text-white"
             }`}
           >
@@ -67,14 +67,14 @@ export default function Header() {
             )}
           </button>
 
-          <nav className="hidden lg:flex items-center gap-8">
+          <nav className="hidden lg:flex items-center gap-9">
             {links.map((l) => (
               <button
                 key={l.id}
                 data-testid={`nav-${l.id}`}
                 onClick={() => go(l.id)}
-                className={`text-sm tracking-wide transition-colors hover:text-gold ${
-                  scrolled ? "text-neutral-700" : "text-white/90"
+                className={`nav-link text-[13px] tracking-[0.02em] transition-colors duration-300 hover:text-gold ${
+                  scrolled ? "text-neutral-700" : "text-white/85"
                 }`}
               >
                 {l.label}
@@ -86,7 +86,7 @@ export default function Header() {
                 href={s.instagram_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`transition-colors hover:text-gold ${scrolled ? "text-neutral-700" : "text-white/90"}`}
+                className={`transition-colors duration-300 hover:text-gold hover:scale-110 ${scrolled ? "text-neutral-700" : "text-white/85"}`}
               >
                 <Instagram size={18} />
               </a>
@@ -94,9 +94,9 @@ export default function Header() {
             <a
               data-testid="nav-call"
               href={telHref(contact.primary_phone)}
-              className="inline-flex items-center gap-2 rounded-full bg-gold px-5 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
+              className="btn-lux inline-flex items-center gap-2 rounded-full bg-gold px-6 py-2.5 text-[13px] font-medium tracking-wide text-white before:bg-[color:var(--cn-ink)] hover:text-white hover:shadow-lg hover:shadow-black/10"
             >
-              <Phone size={15} /> Call
+              <Phone size={14} /> Call
             </a>
           </nav>
 
