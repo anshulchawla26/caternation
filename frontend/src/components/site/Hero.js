@@ -11,12 +11,22 @@ export default function Hero() {
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "22%"]);
   const scale = useTransform(scrollYProgress, [0, 1], [1, 1.12]);
-  const overlay = useTransform(scrollYProgress, [0, 1], [0.45, 0.75]);
+
+  const h = content?.hero || {};
+  const L = h.layout || {};
+  const overlayBase = (typeof L.overlay === "number" ? L.overlay : 45) / 100;
+  const overlay = useTransform(scrollYProgress, [0, 1], [overlayBase, Math.min(overlayBase + 0.3, 0.92)]);
 
   if (!content) return null;
-  const h = content.hero || {};
   const c = content.contact || {};
   const lines = h.heading_lines || ["The Art of", "Fine Catering"];
+
+  const vJustify = { top: "justify-start pt-28", center: "justify-center", bottom: "justify-end" }[L.vertical || "bottom"];
+  const alignCls = L.text_align === "center" ? "items-center text-center" : L.text_align === "right" ? "items-end text-right" : "text-left";
+  const widthCls = { narrow: "max-w-2xl", default: "w-full", wide: "max-w-5xl", full: "w-full" }[L.content_width || "default"];
+  const selfAlign = L.text_align === "center" ? "mx-auto" : L.text_align === "right" ? "ml-auto" : "";
+  const padCls = L.pad_bottom ? "" : "pb-28 md:pb-32";
+  const padStyle = L.pad_bottom ? { paddingBottom: L.pad_bottom } : undefined;
 
   return (
     <section id="home" ref={ref} data-testid="hero-section" className="relative h-[100svh] min-h-[640px] w-full overflow-hidden bg-black">
@@ -27,7 +37,8 @@ export default function Hero() {
       <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/35" />
       <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(120% 80% at 50% 40%, transparent 45%, rgba(0,0,0,0.45) 100%)" }} />
 
-      <div className="relative z-10 h-full max-w-screen-2xl mx-auto px-6 md:px-12 flex flex-col justify-end pb-28 md:pb-32">
+      <div className={`relative z-10 h-full max-w-screen-2xl mx-auto px-6 md:px-12 flex flex-col ${vJustify} ${padCls}`} style={padStyle}>
+        <div className={`flex flex-col ${alignCls} ${widthCls} ${selfAlign}`}>
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -78,6 +89,7 @@ export default function Hero() {
             <MessageCircle size={18} /> {h.cta_whatsapp_label || "WhatsApp"}
           </a>
         </motion.div>
+        </div>
       </div>
 
       <motion.div

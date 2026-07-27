@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { api } from "@/lib/api";
+import { api, uploadImage } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useContent } from "@/context/ContentContext";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import {
   LogOut, Save, RotateCcw, Plus, Trash2, ArrowUp, ArrowDown, ExternalLink,
   Palette, Phone, Image as ImageIcon, Type, Layers, GripVertical,
+  Upload, Link as LinkIcon, Search, User, Layout,
 } from "lucide-react";
 
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -31,13 +32,79 @@ const AreaField = ({ label, value, onChange, testid }) => (
   </div>
 );
 
-const ImageField = ({ label, value, onChange }) => (
+const ImageField = ({ label, value, onChange, hint }) => {
+  const inputRef = useRef(null);
+  const [busy, setBusy] = useState(false);
+  const [showUrl, setShowUrl] = useState(false);
+
+  const pick = () => inputRef.current?.click();
+
+  const onFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { toast.error("Please choose an image file"); return; }
+    setBusy(true);
+    try {
+      const url = await uploadImage(file);
+      onChange(url);
+      toast.success("Image uploaded");
+    } catch (err) {
+      toast.error("Upload failed. " + (err.response?.data?.detail || err.message));
+    } finally {
+      setBusy(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label className="text-xs text-neutral-500">{label}</Label>
+      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={onFile} data-testid={`upload-input-${(label || "").toLowerCase().replace(/\s+/g, "-")}`} />
+      <div className="flex gap-3 items-start">
+        <div className="relative group">
+          {value ? (
+            <img src={value} alt="" className="h-20 w-20 rounded object-cover border bg-neutral-50" />
+          ) : (
+            <div className="h-20 w-20 rounded bg-neutral-100 border grid place-items-center text-neutral-300"><ImageIcon size={22} /></div>
+          )}
+        </div>
+        <div className="flex-1 space-y-2">
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={pick} disabled={busy} data-testid="upload-btn">
+              <Upload size={14} className="mr-1.5" /> {busy ? "Uploading…" : value ? "Replace" : "Upload"}
+            </Button>
+            {value && (
+              <Button type="button" variant="outline" size="sm" className="text-red-500" onClick={() => onChange("")} data-testid="remove-image-btn">
+                <Trash2 size={14} className="mr-1.5" /> Remove
+              </Button>
+            )}
+            <Button type="button" variant="ghost" size="sm" className="text-neutral-500" onClick={() => setShowUrl((v) => !v)}>
+              <LinkIcon size={14} className="mr-1.5" /> URL
+            </Button>
+          </div>
+          {showUrl && (
+            <Input value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder="https://image-url or paste link" />
+          )}
+          {hint && <p className="text-[11px] text-neutral-400">{hint}</p>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SelectField = ({ label, value, onChange, options, testid }) => (
   <div className="space-y-1.5">
     <Label className="text-xs text-neutral-500">{label}</Label>
-    <div className="flex gap-3">
-      {value ? <img src={value} alt="" className="h-16 w-16 rounded object-cover border" /> : <div className="h-16 w-16 rounded bg-neutral-100 border grid place-items-center text-neutral-300"><ImageIcon size={20} /></div>}
-      <Input value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder="https://image-url" className="flex-1" />
-    </div>
+    <select
+      data-testid={testid}
+      value={value ?? ""}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full h-10 rounded-md border border-input bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-300"
+    >
+      {options.map((o) => (
+        <option key={o.value} value={o.value}>{o.label}</option>
+      ))}
+    </select>
   </div>
 );
 
@@ -94,8 +161,106 @@ const TABS = [
   { id: "counters", label: "Live Counters", icon: Layers },
   { id: "gallery", label: "Gallery", icon: ImageIcon },
   { id: "testimonials", label: "Testimonials", icon: Type },
+  { id: "seo", label: "Site Settings", icon: Search },
+  { id: "account", label: "Account", icon: User },
   { id: "sections", label: "Sections & Order", icon: GripVertical },
 ];
+
+// defaults for keys that may be missing from older saved content
+const CONTENT_DEFAULTS = {
+  seo: {
+    title: "", description: "", og_title: "", og_description: "",
+    og_image: "", canonical_url: "", ga_id: "", gsc_verification: "", favicon: "",
+  },
+  typography: {
+    heading: { weight: "", letter_spacing: "", line_height: "", transform: "none" },
+    body: { weight: "", letter_spacing: "", line_height: "", transform: "none" },
+  },
+  heroLayout: { text_align: "left", vertical: "bottom", content_width: "default", pad_bottom: "", overlay: 45 },
+};
+
+function withDefaults(content) {
+  const c = structuredClone(content);
+  c.seo = { ...CONTENT_DEFAULTS.seo, ...(c.seo || {}) };
+  c.settings = c.settings || {};
+  c.settings.typography = {
+    heading: { ...CONTENT_DEFAULTS.typography.heading, ...(c.settings.typography?.heading || {}) },
+    body: { ...CONTENT_DEFAULTS.typography.body, ...(c.settings.typography?.body || {}) },
+  };
+  c.hero = c.hero || {};
+  c.hero.layout = { ...CONTENT_DEFAULTS.heroLayout, ...(c.hero.layout || {}) };
+  return c;
+}
+
+function AccountPanel({ user }) {
+  const [name, setName] = useState(user?.name || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [cur, setCur] = useState("");
+  const [nw, setNw] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [savingPw, setSavingPw] = useState(false);
+
+  const saveProfile = async () => {
+    setSavingProfile(true);
+    try {
+      await api.put("/auth/account", { name, email });
+      toast.success("Profile updated");
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Update failed");
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const savePassword = async () => {
+    if (nw !== confirm) { toast.error("New passwords do not match"); return; }
+    if (nw.length < 6) { toast.error("New password must be at least 6 characters"); return; }
+    setSavingPw(true);
+    try {
+      await api.put("/auth/password", { current_password: cur, new_password: nw });
+      toast.success("Password changed");
+      setCur(""); setNw(""); setConfirm("");
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Change failed");
+    } finally {
+      setSavingPw(false);
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      <div className="space-y-4 bg-white border rounded-lg p-6">
+        <p className="font-medium">Profile</p>
+        <Field label="Display name" value={name} onChange={setName} testid="account-name" />
+        <Field label="Email" value={email} onChange={setEmail} testid="account-email" />
+        <Button onClick={saveProfile} disabled={savingProfile} data-testid="save-profile-btn" className="bg-[color:var(--cn-ink)] hover:bg-neutral-800">
+          {savingProfile ? "Saving…" : "Save profile"}
+        </Button>
+      </div>
+      <div className="space-y-4 bg-white border rounded-lg p-6">
+        <p className="font-medium">Change password</p>
+        <div className="space-y-1.5">
+          <Label className="text-xs text-neutral-500">Current password</Label>
+          <Input type="password" value={cur} onChange={(e) => setCur(e.target.value)} data-testid="current-password" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs text-neutral-500">New password</Label>
+            <Input type="password" value={nw} onChange={(e) => setNw(e.target.value)} data-testid="new-password" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-neutral-500">Confirm new password</Label>
+            <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} data-testid="confirm-password" />
+          </div>
+        </div>
+        <Button onClick={savePassword} disabled={savingPw} data-testid="save-password-btn" className="bg-[color:var(--cn-ink)] hover:bg-neutral-800">
+          {savingPw ? "Updating…" : "Update password"}
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminDashboard() {
   const { user, ready, logout } = useAuth();
@@ -110,7 +275,7 @@ export default function AdminDashboard() {
   }, [ready, user, navigate]);
 
   useEffect(() => {
-    if (content && !draft) setDraft(structuredClone(content));
+    if (content && !draft) setDraft(withDefaults(content));
   }, [content, draft]);
 
   if (!draft) return <div className="min-h-screen grid place-items-center text-neutral-400">Loading studio…</div>;
@@ -141,7 +306,7 @@ export default function AdminDashboard() {
   const reset = async () => {
     if (!window.confirm("Reset all content to defaults? This cannot be undone.")) return;
     const { data } = await api.post("/content/reset");
-    setDraft(structuredClone(data.content));
+    setDraft(withDefaults(data.content));
     await refetch();
     toast.success("Content reset to defaults");
   };
@@ -191,7 +356,7 @@ export default function AdminDashboard() {
             <>
               <Field label="Brand name" value={s.brand_name} onChange={(v) => set(["settings", "brand_name"], v)} testid="brand-name" />
               <Field label="Logo text" value={s.logo_text} onChange={(v) => set(["settings", "logo_text"], v)} />
-              <ImageField label="Logo image URL (optional)" value={s.logo_url} onChange={(v) => set(["settings", "logo_url"], v)} />
+              <ImageField label="Logo" hint="Upload a transparent PNG for best results. Leave empty to use the text logo." value={s.logo_url} onChange={(v) => set(["settings", "logo_url"], v)} />
               <Field label="Instagram URL" value={s.instagram_url} onChange={(v) => set(["settings", "instagram_url"], v)} />
               <div className="grid grid-cols-2 gap-4 pt-2">
                 {[["background", "Background"], ["beige", "Beige sections"], ["text", "Text"], ["gold", "Gold accent"]].map(([k, lbl]) => (
@@ -207,6 +372,24 @@ export default function AdminDashboard() {
               <div className="grid grid-cols-2 gap-4">
                 <Field label="Heading font" value={s.fonts?.heading} onChange={(v) => set(["settings", "fonts", "heading"], v)} />
                 <Field label="Body font" value={s.fonts?.body} onChange={(v) => set(["settings", "fonts", "body"], v)} />
+              </div>
+
+              <div className="pt-4 mt-2 border-t">
+                <p className="text-sm font-medium mb-1">Typography fine-tuning</p>
+                <p className="text-xs text-neutral-400 mb-4">Optional overrides. Leave blank to keep the current premium defaults.</p>
+                {[["heading", "Headings"], ["body", "Body text"]].map(([g, gl]) => (
+                  <div key={g} className="mb-5">
+                    <Label className="text-xs font-medium text-neutral-600">{gl}</Label>
+                    <div className="grid grid-cols-2 gap-3 mt-2">
+                      <SelectField label="Font weight" value={s.typography?.[g]?.weight} onChange={(v) => set(["settings", "typography", g, "weight"], v)}
+                        options={[{value:"",label:"Default"},{value:"300",label:"Light (300)"},{value:"400",label:"Regular (400)"},{value:"500",label:"Medium (500)"},{value:"600",label:"Semibold (600)"},{value:"700",label:"Bold (700)"},{value:"800",label:"Extra Bold (800)"}]} />
+                      <Field label="Letter spacing (e.g. -0.02em)" value={s.typography?.[g]?.letter_spacing} onChange={(v) => set(["settings", "typography", g, "letter_spacing"], v)} />
+                      <Field label="Line height (e.g. 1.1)" value={s.typography?.[g]?.line_height} onChange={(v) => set(["settings", "typography", g, "line_height"], v)} />
+                      <SelectField label="Text transform" value={s.typography?.[g]?.transform} onChange={(v) => set(["settings", "typography", g, "transform"], v)}
+                        options={[{value:"none",label:"Default"},{value:"uppercase",label:"UPPERCASE"},{value:"lowercase",label:"lowercase"},{value:"capitalize",label:"Capitalize"}]} />
+                    </div>
+                  </div>
+                ))}
               </div>
             </>
           )}
@@ -244,10 +427,28 @@ export default function AdminDashboard() {
               <Field label="Overline" value={draft.hero.overline} onChange={(v) => set(["hero", "overline"], v)} />
               <StringList label="Heading lines" items={draft.hero.heading_lines} onChange={(v) => set(["hero", "heading_lines"], v)} />
               <AreaField label="Subheading" value={draft.hero.subheading} onChange={(v) => set(["hero", "subheading"], v)} />
-              <ImageField label="Hero image URL" value={draft.hero.image_url} onChange={(v) => set(["hero", "image_url"], v)} />
+              <ImageField label="Hero image" value={draft.hero.image_url} onChange={(v) => set(["hero", "image_url"], v)} />
               <div className="grid grid-cols-2 gap-4">
                 <Field label="Call button label" value={draft.hero.cta_call_label} onChange={(v) => set(["hero", "cta_call_label"], v)} />
                 <Field label="WhatsApp button label" value={draft.hero.cta_whatsapp_label} onChange={(v) => set(["hero", "cta_whatsapp_label"], v)} />
+              </div>
+
+              <div className="pt-4 mt-2 border-t">
+                <p className="text-sm font-medium mb-1 flex items-center gap-2"><Layout size={15} /> Hero layout</p>
+                <p className="text-xs text-neutral-400 mb-4">Fine-tune positioning. Defaults match the current design.</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <SelectField label="Text alignment" testid="hero-text-align" value={draft.hero.layout?.text_align} onChange={(v) => set(["hero", "layout", "text_align"], v)}
+                    options={[{value:"left",label:"Left"},{value:"center",label:"Center"},{value:"right",label:"Right"}]} />
+                  <SelectField label="Vertical position" value={draft.hero.layout?.vertical} onChange={(v) => set(["hero", "layout", "vertical"], v)}
+                    options={[{value:"top",label:"Top"},{value:"center",label:"Center"},{value:"bottom",label:"Bottom"}]} />
+                  <SelectField label="Content width" value={draft.hero.layout?.content_width} onChange={(v) => set(["hero", "layout", "content_width"], v)}
+                    options={[{value:"narrow",label:"Narrow"},{value:"default",label:"Default"},{value:"wide",label:"Wide"},{value:"full",label:"Full"}]} />
+                  <Field label="Bottom spacing (e.g. 7rem)" value={draft.hero.layout?.pad_bottom} onChange={(v) => set(["hero", "layout", "pad_bottom"], v)} />
+                </div>
+                <div className="mt-3 space-y-1.5">
+                  <Label className="text-xs text-neutral-500">Image darkness (overlay {draft.hero.layout?.overlay ?? 45}%)</Label>
+                  <input type="range" min="0" max="90" value={draft.hero.layout?.overlay ?? 45} onChange={(e) => set(["hero", "layout", "overlay"], Number(e.target.value))} className="w-full" data-testid="hero-overlay" />
+                </div>
               </div>
             </>
           )}
@@ -343,6 +544,23 @@ export default function AdminDashboard() {
               </div>
             </>
           )}
+
+          {tab === "seo" && (
+            <>
+              <p className="text-sm text-neutral-500 -mt-1">Search engine & social sharing settings for the whole site.</p>
+              <ImageField label="Favicon" hint="Square PNG recommended (e.g. 512×512)." value={draft.seo.favicon} onChange={(v) => set(["seo", "favicon"], v)} />
+              <Field label="SEO title" value={draft.seo.title} onChange={(v) => set(["seo", "title"], v)} testid="seo-title" />
+              <AreaField label="Meta description" value={draft.seo.description} onChange={(v) => set(["seo", "description"], v)} />
+              <Field label="Open Graph title" value={draft.seo.og_title} onChange={(v) => set(["seo", "og_title"], v)} />
+              <AreaField label="Open Graph description" value={draft.seo.og_description} onChange={(v) => set(["seo", "og_description"], v)} />
+              <ImageField label="Social sharing image (OG image)" hint="Recommended 1200×630." value={draft.seo.og_image} onChange={(v) => set(["seo", "og_image"], v)} />
+              <Field label="Canonical URL" value={draft.seo.canonical_url} onChange={(v) => set(["seo", "canonical_url"], v)} placeholder="https://caternation.com" />
+              <Field label="Google Analytics ID (optional)" value={draft.seo.ga_id} onChange={(v) => set(["seo", "ga_id"], v)} placeholder="G-XXXXXXXXXX" />
+              <Field label="Google Search Console verification (optional)" value={draft.seo.gsc_verification} onChange={(v) => set(["seo", "gsc_verification"], v)} placeholder="content value of the meta tag" />
+            </>
+          )}
+
+          {tab === "account" && <AccountPanel user={user} />}
 
           {tab === "sections" && (
             <div className="space-y-3">

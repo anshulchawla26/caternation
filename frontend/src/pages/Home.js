@@ -13,6 +13,7 @@ import Testimonials from "@/components/site/Testimonials";
 import Contact from "@/components/site/Contact";
 import Footer from "@/components/site/Footer";
 import FloatingButtons from "@/components/site/FloatingButtons";
+import SiteHead from "@/components/site/SiteHead";
 
 const MAP = {
   hero: Hero,
@@ -55,6 +56,7 @@ export default function Home() {
 
   return (
     <div className="relative bg-white overflow-x-hidden">
+      <SiteHead />
       <Header />
       <main>
         {sections.map((sec) => {

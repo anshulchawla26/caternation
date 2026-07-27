@@ -38,7 +38,22 @@ DEFAULT_CONTENT = {
             "heading": "Playfair Display",
             "body": "Inter",
         },
+        "typography": {
+            "heading": {"weight": "", "letter_spacing": "", "line_height": "", "transform": "none"},
+            "body": {"weight": "", "letter_spacing": "", "line_height": "", "transform": "none"},
+        },
         "button_style": "pill",
+    },
+    "seo": {
+        "title": "CaterNation · Luxury Catering in Amritsar",
+        "description": "Luxury catering in Amritsar for weddings, corporate events, private dinners and religious functions. Michelin-inspired food, live counters and elegant service.",
+        "og_title": "CaterNation · Luxury Catering",
+        "og_description": "Crafting unforgettable culinary experiences across Punjab.",
+        "og_image": "",
+        "canonical_url": "",
+        "ga_id": "",
+        "gsc_verification": "",
+        "favicon": "",
     },
     "contact": {
         "primary_phone": "+91 6284649883",
@@ -59,6 +74,13 @@ DEFAULT_CONTENT = {
         "image_url": IMG["hero"],
         "cta_call_label": "Call Us",
         "cta_whatsapp_label": "WhatsApp",
+        "layout": {
+            "text_align": "left",
+            "vertical": "bottom",
+            "content_width": "default",
+            "pad_bottom": "",
+            "overlay": 45,
+        },
     },
     "marquee": {
         "words": ["Luxury Catering", "Michelin-Inspired", "Exquisite Flavours", "Unforgettable Events", "Handcrafted Menus"],

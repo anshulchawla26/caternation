@@ -2,6 +2,7 @@ import axios from "axios";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
+export { BACKEND_URL };
 
 export const api = axios.create({ baseURL: API });
 
@@ -12,6 +13,13 @@ api.interceptors.request.use((config) => {
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
+
+export async function uploadImage(file) {
+  const form = new FormData();
+  form.append("file", file);
+  const { data } = await api.post("/media", form, { headers: { "Content-Type": "multipart/form-data" } });
+  return `${BACKEND_URL}${data.path}`;
+}
 
 export function telHref(raw) {
   const digits = (raw || "").replace(/[^\d+]/g, "");
