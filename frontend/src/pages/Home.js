@@ -54,7 +54,7 @@ export default function Home() {
   const sections = (content.sections || []).filter((x) => x.visible);
 
   return (
-    <div className="bg-white overflow-x-hidden">
+    <div className="relative bg-white overflow-x-hidden">
       <Header />
       <main>
         {sections.map((sec) => {
