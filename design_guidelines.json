@@ -1,0 +1,176 @@
+{
+  "project_context": {
+    "brand_name": "CaterNation",
+    "industry": "Luxury Catering",
+    "vibe": "Awwwards Site-of-the-Day, Michelin-star restaurant, High-end hospitality, Luxury, Image-first, Minimal, Timeless",
+    "objective": "Build trust through visual WOW factor, drive immediate Call/WhatsApp conversions."
+  },
+  "colors": {
+    "background": {
+      "primary": "#FFFFFF",
+      "secondary": "#F9F6F0"
+    },
+    "text": {
+      "primary": "#0A0A0A",
+      "secondary": "#4A4A4A"
+    },
+    "accent": {
+      "champagne_gold": "#D4AF37",
+      "champagne_gold_muted": "#E5C87B",
+      "champagne_gold_subtle": "#F6EDD9"
+    },
+    "rules": "White is the dominant color (80%). Soft warm beige is used for section breaks (15%). Champagne gold is strictly an accent (5%) never overused. Black for maximum typographic contrast."
+  },
+  "typography": {
+    "headings": {
+      "family": "Playfair Display, serif",
+      "style": "Elegant, large scale, tight tracking for large text, high contrast."
+    },
+    "body": {
+      "family": "Inter, sans-serif",
+      "style": "Clean, highly readable, generous line height (leading-relaxed)."
+    },
+    "scale": {
+      "h1_hero": "text-5xl sm:text-6xl lg:text-[7vw] leading-none tracking-tight",
+      "h2_section": "text-4xl sm:text-5xl lg:text-6xl leading-tight tracking-tight",
+      "h3_card": "text-2xl sm:text-3xl leading-snug",
+      "body": "text-base lg:text-lg leading-relaxed text-gray-800",
+      "overline": "text-xs lg:text-sm uppercase tracking-[0.2em] font-medium"
+    }
+  },
+  "grids_and_spacing": {
+    "philosophy": "Generous Spacing Philosophy: Use 2-3x more spacing than typical designs. Let the photography breathe.",
+    "section_padding": "py-24 md:py-32 lg:py-40",
+    "container": "max-w-screen-2xl mx-auto px-6 md:px-12",
+    "bento_rules": "Avoid rigid symmetrical grids. Use asymmetrical 12-column grids or overlapping offsets for image curation."
+  },
+  "layouts_and_components": {
+    "navigation": {
+      "style": "Sticky glassmorphism header (backdrop-blur-xl bg-white/70) with 1px delicate bottom border (border-black/5).",
+      "links": "Home, About, Services, Signature Dishes, Live Counters, Gallery, Testimonials, Contact.",
+      "cta": "Subtle Call/WhatsApp text links in nav, Instagram icon."
+    },
+    "hero": {
+      "style": "Kinetic full-screen hero. Dark/cinematic image with bg-black/40 overlay to ensure text contrast.",
+      "animation": "Signature on-load moment: Masked line-by-line reveal of the headline using Framer Motion (staggered overflow-hidden containers).",
+      "content": "Large Playfair Display headline (e.g., 'The Art of Fine Catering'), small Inter subheading. ONLY two CTAs: Call and WhatsApp (elegant pill buttons, one filled champagne gold, one outlined white). NO 'Get Quote' buttons."
+    },
+    "about_manifesto": {
+      "style": "Numbered manifesto chapters. High editorial contrast. Large typography.",
+      "layout": "Sticky left column with chapter number (e.g., '01', '02' in large Playfair Display), right column scrolling content. Parallax image reveals."
+    },
+    "services": {
+      "style": "Image-first cards. Minimal text.",
+      "layout": "Asymmetrical grid or horizontal scroll. Cards feature a large clipped frame image, a title (e.g., 'Wedding Catering'), and a short 1-sentence description.",
+      "hover": "Image scales up slowly (scale-105 transition-transform duration-700), text shifts slightly."
+    },
+    "signature_dishes": {
+      "style": "Premium food presentation. Large spotlight imagery.",
+      "layout": "Alternating left-right image/text layout with massive negative space. Images have organic or sharp clipped edges."
+    },
+    "live_counters": {
+      "style": "Immersive showcase. Full bleed or wide aspect ratio images.",
+      "layout": "Editorial carousel or parallax scroll section showcasing the setup."
+    },
+    "gallery": {
+      "style": "The strongest section. Luxury photography portfolio.",
+      "layout": "Masonry/editorial grid. Mix of large, tall, and wide images.",
+      "features": "Category filters (All, Weddings, Corporate, Plating) with smooth layout animations (Framer Motion layout prop). Lightbox on click. Lazy loading for performance."
+    },
+    "testimonials": {
+      "style": "Elegant cards, premium spacing.",
+      "layout": "Simple 1-3 column grid or slow fading carousel. Use soft warm beige (bg-[#F9F6F0]) for the section background to contrast with the white site."
+    },
+    "contact": {
+      "style": "Personal, hospitality-focused.",
+      "layout": "Two owner contact cards (Vivek Chawla, Jatin Chawla) with their roles and direct numbers. Google Maps embed (Amritsar, Punjab), Business hours, Instagram link.",
+      "design": "Clean, structured, un-cluttered. Black and white aesthetic."
+    },
+    "floating_buttons": {
+      "style": "Always-visible fixed bottom-right buttons.",
+      "design": "Full text buttons: 'Call' and 'WhatsApp'. NOT icon-only. Pill-shaped (rounded-full), distinct colors (e.g., WhatsApp green #25D366 or elegant black/gold, but keep text legible). Stacked or side-by-side with backdrop blur."
+    },
+    "editorial_marquee": {
+      "style": "Slow, organic editorial ribbon.",
+      "content": "Words like 'Luxury Catering • Michelin-Star Quality • Exquisite Flavors • Unforgettable Events'.",
+      "design": "Pale warm beige background, dark text, Playfair Display italic, massive gaps (gap-32), very slow drift."
+    },
+    "admin_panel": {
+      "style": "Headless CMS interface. Clean, utilitarian, Shadcn UI dense dashboard.",
+      "features": "Sidebar navigation (Pages, Sections, Settings). Forms to edit logo, colors, fonts, hero, services, gallery, dishes, counters, testimonials, contact. Drag-and-drop or simple up/down arrows to change section order. Toggle switches to show/hide sections."
+    }
+  },
+  "motion_and_interactions": {
+    "libraries": ["framer-motion", "lenis"],
+    "scroll_behavior": "Mandatory: Use Lenis for smooth momentum scrolling. It makes the site feel premium and heavy.",
+    "reveal_animations": "Use Framer Motion for section scroll-reveals (fade up, slow y-translate).",
+    "micro_interactions": "Image hover zooms (duration-700 ease-out), button magnetic pulls or subtle background fill sweeps.",
+    "hero_3d_parallax": "One subtle parallax moment on the hero image (using Framer Motion useScroll/useTransform) to create cinematic depth as the user scrolls down."
+  },
+  "media": {
+    "hero_images": [
+      {
+        "url": "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHwyfHxnb3VybWV0JTIwY2hlZiUyMHBsYXRpbmclMjBmb29kJTIwY2xvc2UlMjB1cHxlbnwwfHx8fDE3ODI2NjM3MjF8MA&ixlib=rb-4.1.0&q=85",
+        "category": "Hero Background",
+        "description": "Chef preparing food under warm lighting. Dark and cinematic."
+      }
+    ],
+    "signature_dishes": [
+      {
+        "url": "https://images.unsplash.com/photo-1616671276441-2f2c277b8bf9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA3MDR8MHwxfHNlYXJjaHw0fHxtaWNoZWxpbiUyMHN0YXIlMjBmb29kJTIwcHJlc2VudGF0aW9uJTIwcGxhdGluZ3xlbnwwfHx8fDE3ODUxNjMzODR8MA&ixlib=rb-4.1.0&q=85",
+        "category": "Signature Dish",
+        "description": "Exquisite Michelin-style plating on white ceramic."
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1600663791817-d74f5196ba29?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA3MDR8MHwxfHNlYXJjaHwxfHxtaWNoZWxpbiUyMHN0YXIlMjBmb29kJTIwcHJlc2VudGF0aW9uJTIwcGxhdGluZ3xlbnwwfHx8fDE3ODUxNjMzODR8MA&ixlib=rb-4.1.0&q=85",
+        "category": "Signature Dish",
+        "description": "Action shot of chef pouring sauce."
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1673706530246-4c1d8b141748?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA3MDR8MHwxfHNlYXJjaHwzfHxtaWNoZWxpbiUyMHN0YXIlMjBmb29kJTIwcHJlc2VudGF0aW9uJTIwcGxhdGluZ3xlbnwwfHx8fDE3ODUxNjMzODR8MA&ixlib=rb-4.1.0&q=85",
+        "category": "Signature Dish",
+        "description": "Succulent dessert or avant-garde plating."
+      }
+    ],
+    "services_and_live_counters": [
+      {
+        "url": "https://images.unsplash.com/photo-1555244162-803834f70033?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNzl8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjB3ZWRkaW5nJTIwY2F0ZXJpbmclMjBidWZmZXQlMjBzZXR1cHxlbnwwfHx8fDE3ODI3MjM4OTB8MA&ixlib=rb-4.1.0&q=85",
+        "category": "Live Counters / Buffet",
+        "description": "Elegant dumpling/food platter."
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1651964060295-ef9e1ee08667?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNzl8MHwxfHNlYXJjaHwyfHxsdXh1cnklMjB3ZWRkaW5nJTIwY2F0ZXJpbmclMjBidWZmZXQlMjBzZXR1cHxlbnwwfHx8fDE3ODI3MjM4OTB8MA&ixlib=rb-4.1.0&q=85",
+        "category": "Live Counters / Buffet",
+        "description": "Table with abundant, styled food setup."
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1581349485608-9469926a8e5e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHwzfHxnb3VybWV0JTIwY2hlZiUyMHBsYXRpbmclMjBmb29kJTIwY2xvc2UlMjB1cHxlbnwwfHx8fDE3ODI2NjM3MjF8MA&ixlib=rb-4.1.0&q=85",
+        "category": "Live Counters / Buffet",
+        "description": "Chef setting up multiple plates in a high-end kitchen."
+      }
+    ]
+  },
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": {
+    "instructions": [
+      "DO NOT create generic 'Bootstrap-style' columns. Use overlapping layers, asymmetrical grids, and high negative space to simulate an editorial magazine.",
+      "The 'Gallery' is the centerpiece of the site. It MUST include category filters, lazy loading, a masonry/bento grid, and a lightbox implementation.",
+      "The Hero must be fully kinetic with a masked line-by-line reveal on load.",
+      "Implement a continuous editorial marquee using Framer Motion or react-fast-marquee.",
+      "Floating buttons MUST contain text ('Call', 'WhatsApp') and remain visible at all times. Z-index must be high (z-50).",
+      "Admin panel must be separated visually (standard Shadcn dark/light dashboard) from the main consumer site (luxury custom frontend).",
+      "Do NOT add any booking, pricing, or package features. The only conversions are Call and WhatsApp.",
+      "DO NOT use completely transparent backgrounds for the navigation header. Use backdrop-blur and semi-transparent white.",
+      "Ensure all interactive elements have data-testid attributes.",
+      "Use .js files for frontend implementation as per constraints. Do NOT use .tsx files."
+    ],
+    "testing": "Add data-testid to all forms, links, buttons, and navigation elements.",
+    "libraries_to_install": [
+      "framer-motion",
+      "lenis",
+      "lucide-react",
+      "clsx",
+      "tailwind-merge",
+      "sonner"
+    ]
+  }
+}
