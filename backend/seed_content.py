@@ -39,6 +39,9 @@ DEFAULT_CONTENT = {
             "body": "Inter",
         },
         "typography": {
+            "hero_heading_size": "",
+            "section_heading_size": "",
+            "body_size": "",
             "heading": {"weight": "", "letter_spacing": "", "line_height": "", "transform": "none"},
             "body": {"weight": "", "letter_spacing": "", "line_height": "", "transform": "none"},
         },

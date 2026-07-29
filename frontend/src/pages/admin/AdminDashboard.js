@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { api, uploadImage } from "@/lib/api";
+import { api, uploadImage, listMedia, deleteMedia } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useContent } from "@/context/ContentContext";
 import { Button } from "@/components/ui/button";
@@ -9,10 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   LogOut, Save, RotateCcw, Plus, Trash2, ArrowUp, ArrowDown, ExternalLink,
   Palette, Phone, Image as ImageIcon, Type, Layers, GripVertical,
-  Upload, Link as LinkIcon, Search, User, Layout,
+  Upload, Link as LinkIcon, Search, User, Layout, Images, Check,
 } from "lucide-react";
 
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -32,10 +33,53 @@ const AreaField = ({ label, value, onChange, testid }) => (
   </div>
 );
 
+function MediaPicker({ open, onOpenChange, onSelect }) {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    setLoading(true);
+    listMedia().then(setItems).catch(() => {}).finally(() => setLoading(false));
+  }, [open]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>Media Library</DialogTitle>
+        </DialogHeader>
+        {loading ? (
+          <p className="text-sm text-neutral-400 py-10 text-center">Loading…</p>
+        ) : items.length === 0 ? (
+          <p className="text-sm text-neutral-400 py-10 text-center">No uploads yet. Upload an image from any field to reuse it here.</p>
+        ) : (
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 max-h-[60vh] overflow-y-auto p-1">
+            {items.map((m) => (
+              <button
+                key={m.id}
+                data-testid={`picker-media-${m.id}`}
+                onClick={() => { onSelect(m.url); onOpenChange(false); }}
+                className="group relative aspect-square rounded-md overflow-hidden border hover:ring-2 hover:ring-gold"
+              >
+                <img src={m.url} alt={m.filename} className="h-full w-full object-cover" />
+                <span className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                  <Check size={22} className="text-white opacity-0 group-hover:opacity-100" />
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 const ImageField = ({ label, value, onChange, hint }) => {
   const inputRef = useRef(null);
   const [busy, setBusy] = useState(false);
   const [showUrl, setShowUrl] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const pick = () => inputRef.current?.click();
 
@@ -60,6 +104,7 @@ const ImageField = ({ label, value, onChange, hint }) => {
     <div className="space-y-2">
       <Label className="text-xs text-neutral-500">{label}</Label>
       <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={onFile} data-testid={`upload-input-${(label || "").toLowerCase().replace(/\s+/g, "-")}`} />
+      <MediaPicker open={pickerOpen} onOpenChange={setPickerOpen} onSelect={onChange} />
       <div className="flex gap-3 items-start">
         <div className="relative group">
           {value ? (
@@ -72,6 +117,9 @@ const ImageField = ({ label, value, onChange, hint }) => {
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" size="sm" onClick={pick} disabled={busy} data-testid="upload-btn">
               <Upload size={14} className="mr-1.5" /> {busy ? "Uploading…" : value ? "Replace" : "Upload"}
+            </Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => setPickerOpen(true)} data-testid="library-btn">
+              <Images size={14} className="mr-1.5" /> Library
             </Button>
             {value && (
               <Button type="button" variant="outline" size="sm" className="text-red-500" onClick={() => onChange("")} data-testid="remove-image-btn">
@@ -161,6 +209,7 @@ const TABS = [
   { id: "counters", label: "Live Counters", icon: Layers },
   { id: "gallery", label: "Gallery", icon: ImageIcon },
   { id: "testimonials", label: "Testimonials", icon: Type },
+  { id: "media", label: "Media Library", icon: Images },
   { id: "seo", label: "Site Settings", icon: Search },
   { id: "account", label: "Account", icon: User },
   { id: "sections", label: "Sections & Order", icon: GripVertical },
@@ -173,6 +222,7 @@ const CONTENT_DEFAULTS = {
     og_image: "", canonical_url: "", ga_id: "", gsc_verification: "", favicon: "",
   },
   typography: {
+    hero_heading_size: "", section_heading_size: "", body_size: "",
     heading: { weight: "", letter_spacing: "", line_height: "", transform: "none" },
     body: { weight: "", letter_spacing: "", line_height: "", transform: "none" },
   },
@@ -184,12 +234,94 @@ function withDefaults(content) {
   c.seo = { ...CONTENT_DEFAULTS.seo, ...(c.seo || {}) };
   c.settings = c.settings || {};
   c.settings.typography = {
+    hero_heading_size: c.settings.typography?.hero_heading_size ?? "",
+    section_heading_size: c.settings.typography?.section_heading_size ?? "",
+    body_size: c.settings.typography?.body_size ?? "",
     heading: { ...CONTENT_DEFAULTS.typography.heading, ...(c.settings.typography?.heading || {}) },
     body: { ...CONTENT_DEFAULTS.typography.body, ...(c.settings.typography?.body || {}) },
   };
   c.hero = c.hero || {};
   c.hero.layout = { ...CONTENT_DEFAULTS.heroLayout, ...(c.hero.layout || {}) };
   return c;
+}
+
+function MediaLibraryPanel() {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const inputRef = useRef(null);
+
+  const load = () => {
+    setLoading(true);
+    listMedia().then(setItems).catch(() => {}).finally(() => setLoading(false));
+  };
+  useEffect(() => { load(); }, []);
+
+  const onFiles = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    setBusy(true);
+    try {
+      for (const f of files) {
+        if (f.type.startsWith("image/")) await uploadImage(f);
+      }
+      toast.success("Uploaded");
+      load();
+    } catch (err) {
+      toast.error("Upload failed. " + (err.response?.data?.detail || err.message));
+    } finally {
+      setBusy(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  };
+
+  const remove = async (id) => {
+    if (!window.confirm("Delete this image? Sections still using it will show a broken image.")) return;
+    try {
+      await deleteMedia(id);
+      setItems((prev) => prev.filter((m) => m.id !== id));
+      toast.success("Deleted");
+    } catch {
+      toast.error("Delete failed");
+    }
+  };
+
+  const copy = (url) => {
+    navigator.clipboard?.writeText(url);
+    toast.success("URL copied");
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-neutral-500">Upload once, reuse anywhere. Use the <span className="font-medium">Library</span> button on any image field to insert these.</p>
+        <input ref={inputRef} type="file" accept="image/*" multiple className="hidden" onChange={onFiles} data-testid="library-upload-input" />
+        <Button onClick={() => inputRef.current?.click()} disabled={busy} data-testid="library-upload-btn" className="bg-[color:var(--cn-ink)] hover:bg-neutral-800">
+          <Upload size={15} className="mr-1.5" /> {busy ? "Uploading…" : "Upload images"}
+        </Button>
+      </div>
+      {loading ? (
+        <p className="text-sm text-neutral-400 py-10 text-center">Loading…</p>
+      ) : items.length === 0 ? (
+        <div className="border border-dashed rounded-lg py-16 text-center text-neutral-400">
+          <Images size={28} className="mx-auto mb-3 opacity-50" />
+          <p className="text-sm">No images yet. Upload your first images to build your library.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          {items.map((m) => (
+            <div key={m.id} data-testid={`library-item-${m.id}`} className="group relative aspect-square rounded-lg overflow-hidden border bg-neutral-50">
+              <img src={m.url} alt={m.filename} className="h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                <Button size="icon" variant="secondary" className="h-9 w-9" onClick={() => copy(m.url)} title="Copy URL"><LinkIcon size={15} /></Button>
+                <Button size="icon" variant="secondary" className="h-9 w-9 text-red-600" onClick={() => remove(m.id)} data-testid={`library-delete-${m.id}`} title="Delete"><Trash2 size={15} /></Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function AccountPanel({ user }) {
@@ -376,17 +508,47 @@ export default function AdminDashboard() {
 
               <div className="pt-4 mt-2 border-t">
                 <p className="text-sm font-medium mb-1">Typography fine-tuning</p>
-                <p className="text-xs text-neutral-400 mb-4">Optional overrides. Leave blank to keep the current premium defaults.</p>
-                {[["heading", "Headings"], ["body", "Body text"]].map(([g, gl]) => (
+                <p className="text-xs text-neutral-400 mb-4">Optional overrides applied site-wide. Leave any field blank to keep the current premium defaults (and full responsiveness).</p>
+
+                <div className="mb-6 space-y-4">
+                  <p className="text-xs font-medium text-neutral-600">Global font sizes</p>
+                  <div>
+                    <Field label="Hero heading font size (e.g. 6rem, 90px)" value={s.typography?.hero_heading_size} onChange={(v) => set(["settings", "typography", "hero_heading_size"], v)} testid="type-hero-size" />
+                    <p className="text-[11px] text-neutral-400 mt-1">Applies only to the hero heading.</p>
+                  </div>
+                  <div>
+                    <Field label="Section heading font size (e.g. 3.5rem, 48px)" value={s.typography?.section_heading_size} onChange={(v) => set(["settings", "typography", "section_heading_size"], v)} testid="type-section-size" />
+                    <p className="text-[11px] text-neutral-400 mt-1">Applies to all section headings (About, Services, Signature Dishes, Live Counters, Gallery, Testimonials, Contact, etc.).</p>
+                  </div>
+                  <div>
+                    <Field label="Body font size (e.g. 1.05rem, 17px)" value={s.typography?.body_size} onChange={(v) => set(["settings", "typography", "body_size"], v)} testid="type-body-size" />
+                    <p className="text-[11px] text-neutral-400 mt-1">Applies to all paragraphs, descriptions, testimonials and other body text (excludes small uppercase labels).</p>
+                  </div>
+                </div>
+
+                {[["heading", "Headings", "Affects the hero heading and every section heading."], ["body", "Body text", "Affects paragraphs, descriptions and testimonial quotes."]].map(([g, gl, desc]) => (
                   <div key={g} className="mb-5">
                     <Label className="text-xs font-medium text-neutral-600">{gl}</Label>
-                    <div className="grid grid-cols-2 gap-3 mt-2">
-                      <SelectField label="Font weight" value={s.typography?.[g]?.weight} onChange={(v) => set(["settings", "typography", g, "weight"], v)}
-                        options={[{value:"",label:"Default"},{value:"300",label:"Light (300)"},{value:"400",label:"Regular (400)"},{value:"500",label:"Medium (500)"},{value:"600",label:"Semibold (600)"},{value:"700",label:"Bold (700)"},{value:"800",label:"Extra Bold (800)"}]} />
-                      <Field label="Letter spacing (e.g. -0.02em)" value={s.typography?.[g]?.letter_spacing} onChange={(v) => set(["settings", "typography", g, "letter_spacing"], v)} />
-                      <Field label="Line height (e.g. 1.1)" value={s.typography?.[g]?.line_height} onChange={(v) => set(["settings", "typography", g, "line_height"], v)} />
-                      <SelectField label="Text transform" value={s.typography?.[g]?.transform} onChange={(v) => set(["settings", "typography", g, "transform"], v)}
-                        options={[{value:"none",label:"Default"},{value:"uppercase",label:"UPPERCASE"},{value:"lowercase",label:"lowercase"},{value:"capitalize",label:"Capitalize"}]} />
+                    <p className="text-[11px] text-neutral-400 mb-2">{desc}</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <SelectField label="Font weight" value={s.typography?.[g]?.weight} onChange={(v) => set(["settings", "typography", g, "weight"], v)}
+                          options={[{value:"",label:"Default"},{value:"300",label:"Light (300)"},{value:"400",label:"Regular (400)"},{value:"500",label:"Medium (500)"},{value:"600",label:"Semibold (600)"},{value:"700",label:"Bold (700)"},{value:"800",label:"Extra Bold (800)"}]} />
+                        <p className="text-[11px] text-neutral-400 mt-1">Thickness of the {g === "heading" ? "headings" : "body text"}.</p>
+                      </div>
+                      <div>
+                        <Field label="Letter spacing (e.g. -0.02em)" value={s.typography?.[g]?.letter_spacing} onChange={(v) => set(["settings", "typography", g, "letter_spacing"], v)} />
+                        <p className="text-[11px] text-neutral-400 mt-1">Space between letters.</p>
+                      </div>
+                      <div>
+                        <Field label="Line height (e.g. 1.1)" value={s.typography?.[g]?.line_height} onChange={(v) => set(["settings", "typography", g, "line_height"], v)} />
+                        <p className="text-[11px] text-neutral-400 mt-1">Vertical space between lines.</p>
+                      </div>
+                      <div>
+                        <SelectField label="Text transform" value={s.typography?.[g]?.transform} onChange={(v) => set(["settings", "typography", g, "transform"], v)}
+                          options={[{value:"none",label:"Default"},{value:"uppercase",label:"UPPERCASE"},{value:"lowercase",label:"lowercase"},{value:"capitalize",label:"Capitalize"}]} />
+                        <p className="text-[11px] text-neutral-400 mt-1">Letter casing.</p>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -544,6 +706,8 @@ export default function AdminDashboard() {
               </div>
             </>
           )}
+
+          {tab === "media" && <MediaLibraryPanel />}
 
           {tab === "seo" && (
             <>

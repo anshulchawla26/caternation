@@ -80,7 +80,15 @@ export default function SiteHead() {
       if (cfg.transform && cfg.transform !== "none") rules.push(`text-transform:${cfg.transform} !important`);
       return rules.length ? `${selector}{${rules.join(";")}}` : "";
     };
-    const css = [build(".font-head", t.heading), build("body", t.body)].filter(Boolean).join("\n");
+    const sizeRule = (selector, val) => (val ? `${selector}{font-size:${val} !important}` : "");
+    const css = [
+      build(".font-head", t.heading),
+      build("body", t.body),
+      // global font sizes — scoped to public site (<main>), only applied when set
+      sizeRule("main h1.font-head", t.hero_heading_size),
+      sizeRule("main h2.font-head", t.section_heading_size),
+      sizeRule("main p:not(.overline), main blockquote, main figcaption, main li", t.body_size),
+    ].filter(Boolean).join("\n");
     let style = document.getElementById("cn-typography");
     if (!css) {
       if (style) style.remove();

@@ -21,6 +21,15 @@ export async function uploadImage(file) {
   return `${BACKEND_URL}${data.path}`;
 }
 
+export async function listMedia() {
+  const { data } = await api.get("/media");
+  return data.map((m) => ({ ...m, url: `${BACKEND_URL}${m.path}` }));
+}
+
+export async function deleteMedia(id) {
+  await api.delete(`/media/${id}`);
+}
+
 export function telHref(raw) {
   const digits = (raw || "").replace(/[^\d+]/g, "");
   return `tel:${digits}`;

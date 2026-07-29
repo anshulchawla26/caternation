@@ -191,6 +191,21 @@ async def upload_media(file: UploadFile = File(...), user: dict = Depends(get_cu
     return {"id": str(res.inserted_id), "path": f"/api/media/{res.inserted_id}"}
 
 
+@api_router.get("/media")
+async def list_media(user: dict = Depends(get_current_user)):
+    docs = await db.media.find({}, {"data": 0}).sort("created_at", -1).to_list(500)
+    return [
+        {
+            "id": str(d["_id"]),
+            "path": f"/api/media/{d['_id']}",
+            "filename": d.get("filename", ""),
+            "content_type": d.get("content_type", "image/jpeg"),
+            "created_at": d.get("created_at", ""),
+        }
+        for d in docs
+    ]
+
+
 @api_router.get("/media/{media_id}")
 async def get_media(media_id: str):
     try:
