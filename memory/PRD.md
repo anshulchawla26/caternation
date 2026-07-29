@@ -28,8 +28,8 @@ World-class, luxury/Michelin-star style catering website for brand "CaterNation"
 admin@caternation.com / CaterNation@2025 (see /app/memory/test_credentials.md)
 
 ## Backlog / Next
-- P1: Image upload in CMS (currently image URLs only).
-- P1: Real Instagram feed embed (currently link only, per user request).
-- P2: SEO — sitemap, JSON-LD LocalBusiness schema, OG images.
+- Media Library added (reuse uploads, delete) + global font-size controls (hero/section/body) — 2026-07-29.
+- P2: SEO — JSON-LD LocalBusiness schema + sitemap.
 - P2: Section drag-and-drop (currently up/down arrows).
-- P2: Performance — responsive image srcset, blur-up placeholders.
+- P2: Serve uploads via CDN for long-term browser caching (ingress currently strips cache headers).
+- P3: Split AdminDashboard.js into smaller files.
