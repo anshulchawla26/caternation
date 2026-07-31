@@ -23,7 +23,9 @@ from seed_content import DEFAULT_CONTENT
 
 # ------------------------------------------------------------------ DB
 mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
+# serverSelectionTimeoutMS keeps DB connectivity failures fast so a serverless
+# invocation returns a clean error instead of hanging past the function timeout.
+client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=8000, connectTimeoutMS=8000)
 db = client[os.environ['DB_NAME']]
 
 # ------------------------------------------------------------------ App
@@ -282,27 +284,34 @@ logger = logging.getLogger(__name__)
 
 @app.on_event("startup")
 async def startup():
-    await db.users.create_index("email", unique=True)
-    admin_email = os.environ.get("ADMIN_EMAIL", "admin@caternation.com").lower()
-    admin_password = os.environ.get("ADMIN_PASSWORD", "admin123")
-    existing = await db.users.find_one({"email": admin_email})
-    if existing is None:
-        await db.users.insert_one({
-            "email": admin_email,
-            "password_hash": hash_password(admin_password),
-            "name": "Admin",
-            "role": "admin",
-            "created_at": datetime.now(timezone.utc).isoformat(),
-        })
-        logger.info("Seeded admin user")
-    elif not verify_password(admin_password, existing["password_hash"]):
-        await db.users.update_one({"email": admin_email},
-                                  {"$set": {"password_hash": hash_password(admin_password)}})
-        logger.info("Updated admin password")
-    if not await db.site.find_one({"key": CONTENT_KEY}):
-        await db.site.insert_one({"key": CONTENT_KEY, "content": DEFAULT_CONTENT,
-                                  "updated_at": datetime.now(timezone.utc).isoformat()})
-        logger.info("Seeded site content")
+    # Seeding must never hard-crash the app: on serverless (e.g. Vercel) a DB
+    # connectivity issue at boot would otherwise fail every invocation
+    # (FUNCTION_INVOCATION_FAILED). Any failure here is logged and the app
+    # still starts, returning clean per-request errors instead.
+    try:
+        await db.users.create_index("email", unique=True)
+        admin_email = os.environ.get("ADMIN_EMAIL", "admin@caternation.com").lower()
+        admin_password = os.environ.get("ADMIN_PASSWORD", "admin123")
+        existing = await db.users.find_one({"email": admin_email})
+        if existing is None:
+            await db.users.insert_one({
+                "email": admin_email,
+                "password_hash": hash_password(admin_password),
+                "name": "Admin",
+                "role": "admin",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            })
+            logger.info("Seeded admin user")
+        elif not verify_password(admin_password, existing["password_hash"]):
+            await db.users.update_one({"email": admin_email},
+                                      {"$set": {"password_hash": hash_password(admin_password)}})
+            logger.info("Updated admin password")
+        if not await db.site.find_one({"key": CONTENT_KEY}):
+            await db.site.insert_one({"key": CONTENT_KEY, "content": DEFAULT_CONTENT,
+                                      "updated_at": datetime.now(timezone.utc).isoformat()})
+            logger.info("Seeded site content")
+    except Exception as e:  # noqa: BLE001
+        logger.error(f"Startup seeding skipped (DB not reachable?): {e}")
 
 
 @app.on_event("shutdown")
