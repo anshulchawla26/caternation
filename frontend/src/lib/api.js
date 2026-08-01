@@ -1,6 +1,9 @@
 import axios from "axios";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+// Base URL for the API. Uses REACT_APP_BACKEND_URL when provided (local/Emergent),
+// and falls back to same-origin ("") on platforms like Vercel where the frontend
+// and API share one domain. Trailing slashes are stripped to avoid "//api".
+const BACKEND_URL = (process.env.REACT_APP_BACKEND_URL || "").replace(/\/+$/, "");
 export const API = `${BACKEND_URL}/api`;
 export { BACKEND_URL };
 
