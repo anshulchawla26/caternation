@@ -105,9 +105,52 @@ class PasswordChange(BaseModel):
     new_password: str
 
 
+# ------------------------------------------------------------------ Seeding (idempotent, lazy)
+_seed_done = False
+
+
+async def ensure_seeded():
+    """Idempotently seed the admin user + default content.
+
+    Runs both from the ASGI startup event (local/uvicorn) and lazily on the
+    first login request. This is essential on serverless platforms (e.g. Vercel)
+    where ASGI lifespan/startup events may not run — without it the admin user
+    would never exist and CMS login would fail on a fresh deploy.
+    """
+    global _seed_done
+    if _seed_done:
+        return
+    admin_email = os.environ.get("ADMIN_EMAIL", "admin@caternation.com").lower()
+    admin_password = os.environ.get("ADMIN_PASSWORD", "admin123")
+    try:
+        await db.users.create_index("email", unique=True)
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"create_index skipped: {e}")
+    existing = await db.users.find_one({"email": admin_email})
+    if existing is None:
+        await db.users.insert_one({
+            "email": admin_email,
+            "password_hash": hash_password(admin_password),
+            "name": "Admin",
+            "role": "admin",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        })
+        logger.info("Seeded admin user")
+    elif not verify_password(admin_password, existing["password_hash"]):
+        await db.users.update_one({"email": admin_email},
+                                  {"$set": {"password_hash": hash_password(admin_password)}})
+        logger.info("Updated admin password")
+    if not await db.site.find_one({"key": CONTENT_KEY}):
+        await db.site.insert_one({"key": CONTENT_KEY, "content": DEFAULT_CONTENT,
+                                  "updated_at": datetime.now(timezone.utc).isoformat()})
+        logger.info("Seeded site content")
+    _seed_done = True
+
+
 # ------------------------------------------------------------------ Auth routes
 @api_router.post("/auth/login")
 async def login(body: LoginRequest):
+    await ensure_seeded()
     email = body.email.lower().strip()
     user = await db.users.find_one({"email": email})
     if not user or not verify_password(body.password, user["password_hash"]):
@@ -284,32 +327,9 @@ logger = logging.getLogger(__name__)
 
 @app.on_event("startup")
 async def startup():
-    # Seeding must never hard-crash the app: on serverless (e.g. Vercel) a DB
-    # connectivity issue at boot would otherwise fail every invocation
-    # (FUNCTION_INVOCATION_FAILED). Any failure here is logged and the app
-    # still starts, returning clean per-request errors instead.
+    # Non-fatal: a DB hiccup at boot must not crash the serverless function.
     try:
-        await db.users.create_index("email", unique=True)
-        admin_email = os.environ.get("ADMIN_EMAIL", "admin@caternation.com").lower()
-        admin_password = os.environ.get("ADMIN_PASSWORD", "admin123")
-        existing = await db.users.find_one({"email": admin_email})
-        if existing is None:
-            await db.users.insert_one({
-                "email": admin_email,
-                "password_hash": hash_password(admin_password),
-                "name": "Admin",
-                "role": "admin",
-                "created_at": datetime.now(timezone.utc).isoformat(),
-            })
-            logger.info("Seeded admin user")
-        elif not verify_password(admin_password, existing["password_hash"]):
-            await db.users.update_one({"email": admin_email},
-                                      {"$set": {"password_hash": hash_password(admin_password)}})
-            logger.info("Updated admin password")
-        if not await db.site.find_one({"key": CONTENT_KEY}):
-            await db.site.insert_one({"key": CONTENT_KEY, "content": DEFAULT_CONTENT,
-                                      "updated_at": datetime.now(timezone.utc).isoformat()})
-            logger.info("Seeded site content")
+        await ensure_seeded()
     except Exception as e:  # noqa: BLE001
         logger.error(f"Startup seeding skipped (DB not reachable?): {e}")
 

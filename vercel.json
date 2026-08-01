@@ -1,7 +1,13 @@
 {
-  "installCommand": "yarn --cwd frontend install",
+  "framework": null,
+  "installCommand": "yarn --cwd frontend install --frozen-lockfile",
   "buildCommand": "yarn --cwd frontend build",
   "outputDirectory": "frontend/build",
+  "functions": {
+    "api/index.py": {
+      "includeFiles": "backend/**"
+    }
+  },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
